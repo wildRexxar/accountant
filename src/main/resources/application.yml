@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: @url@
+    username: @username@
+    password: @password@
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties.hibernate:
+      show_sql: false
+      format_sql: true
+  liquibase:
+    changeLog: classpath:/db/changelog/db.changelog-main.yaml
+
+server:
+  port: 2012
+
+logging:
+  level:
+    root: WARN
+    com.example.accountant.controller.UserController: INFO
+  file:
+    name: accountant.log
+    path: /
