@@ -1,5 +1,6 @@
 package com.example.accountant.service;
 
+import com.example.accountant.dto.UserReadDto;
 import com.example.accountant.entity.User;
 import com.example.accountant.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -21,19 +22,16 @@ public class UserServiceTest {
     private static final Long USER_ID_2 = 2L;
 
     @Mock
-    private UserRepository userRepository;
-
-    @InjectMocks
     private UserService userService;
 
     @Test
     void getAllUser() {
-        List<User> users = new ArrayList<>();
-        users.add(new User(USER_ID_1, "Homer", null));
-        users.add(new User(USER_ID_2, "Abe", null));
+        List<UserReadDto> users = new ArrayList<>();
+        users.add(new UserReadDto(USER_ID_1, "Homer", null));
+        users.add(new UserReadDto(USER_ID_2, "Abe", null));
         doReturn(users)
-                .when(userRepository).findAll();
-        List<User> actualResult = userService.getAllUser();
-        assertEquals(2, actualResult.size());
+                .when(userService).findAll();
+        List<UserReadDto> actualResult = userService.findAll();
+        assertEquals(2,actualResult.size());
     }
 }

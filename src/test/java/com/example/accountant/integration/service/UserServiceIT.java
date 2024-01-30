@@ -1,6 +1,7 @@
 package com.example.accountant.integration.service;
 
-import com.example.accountant.entity.User;
+import com.example.accountant.dto.UserCreateUpdateDto;
+import com.example.accountant.dto.UserReadDto;
 import com.example.accountant.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
@@ -28,53 +29,54 @@ public class UserServiceIT {
     private final UserService userService;
 
     @Test
-    void getUserByIdExist(){
-        Optional<User> user = userService.getUserById(11L);
-        assertTrue(user.isPresent());
-        assertEquals("Bart", user.get().getFirstname());
+    void findByIdExist(){
+        Optional<UserReadDto> userReadDto = userService.findById(11L);
+        assertTrue(userReadDto.isPresent());
+        assertEquals("Bart", userReadDto.get().getFirstname());
     }
 
     @Test
-    void getUserByIdNoExist(){
-        Optional<User> user = userService.getUserById(100L);
-        assertFalse(user.isPresent());
+    void findByIdNoExist(){
+        Optional<UserReadDto> userReadDto = userService.findById(100L);
+        assertFalse(userReadDto.isPresent());
     }
 
     @Test
-    void getAllUser() {
-        List<User> users = userService.getAllUser();
+    void findAll() {
+        List<UserReadDto> users = userService.findAll();
         assertEquals(6, users.size());
     }
 
     @Test
-    void addNewUser() {
-        List<User> usersBeforeAdd = userService.getAllUser();
+    void create() {
+        List<UserReadDto> usersBeforeAdd = userService.findAll();
         assertEquals(6, usersBeforeAdd.size());
-        User user = new User("Carl", null);
-        userService.addNewUser(user);
-        List<User> userAfterAdd = userService.getAllUser();
+        UserCreateUpdateDto userCreateUpdateDto = new UserCreateUpdateDto("Carl", null);
+        userService.create(userCreateUpdateDto);
+        List<UserReadDto> userAfterAdd = userService.findAll();
         assertEquals(7, userAfterAdd.size());
-        Optional<User> newUser = userService.getUserById(1L);
+        Optional<UserReadDto> newUser = userService.findById(1L);
         assertTrue(newUser.isPresent());
         assertEquals("Carl", newUser.get().getFirstname());
     }
 
+
     @Test
-    void deleteUser(){
-        List<User> usersBeforeDelete = userService.getAllUser();
+    void delete(){
+        List<UserReadDto> usersBeforeDelete = userService.findAll();
         int sizeBeforeDelete = usersBeforeDelete.size();
-        userService.deleteUser(11L);
-        List<User> usersAfterDelete = userService.getAllUser();
+        userService.delete(11L);
+        List<UserReadDto> usersAfterDelete = userService.findAll();
         assertThat(usersAfterDelete).hasSize(sizeBeforeDelete - 1);
     }
 
     @Test
-    void updateUser(){
-        Optional<User> user = userService.getUserById(10L);
-        assertTrue(user.isPresent());
-        assertEquals("Homer", user.get().getFirstname());
-        userService.updateUser(new User(null, "el Homer", null), 10L);
-        Optional<User> userAfterUpdate = userService.getUserById(10L);
+    void update(){
+        Optional<UserReadDto> userReadDto = userService.findById(10L);
+        assertTrue(userReadDto.isPresent());
+        assertEquals("Homer", userReadDto.get().getFirstname());
+        userService.update(10L, new UserCreateUpdateDto("el Homer", null));
+        Optional<UserReadDto> userAfterUpdate = userService.findById(10L);
         assertTrue(userAfterUpdate.isPresent());
         assertEquals("el Homer", userAfterUpdate.get().getFirstname());
     }

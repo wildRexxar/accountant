@@ -1,6 +1,9 @@
 package com.example.accountant.service;
 
-import com.example.accountant.entity.User;
+import com.example.accountant.dto.UserCreateUpdateDto;
+import com.example.accountant.dto.UserReadDto;
+import com.example.accountant.mapper.UserCreateUpdateMapper;
+import com.example.accountant.mapper.UserReadMapper;
 import com.example.accountant.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -8,44 +11,51 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserReadMapper userReadMapper;
+    private final UserCreateUpdateMapper userCreateUpdateMapper;
 
-    public Optional<User> getUserById(Long id){
-        return  userRepository.findById(id);
+    public Optional<UserReadDto> findById(Long id) {
+        return userRepository.findById(id).map(userReadMapper::map);
     }
 
-    public List<User> getAllUser(){
-        return userRepository.findAll();
+    public List<UserReadDto> findAll() {
+        return userRepository.findAll().stream()
+                .map(userReadMapper::map)
+                .collect(Collectors.toList());
     }
 
-    public User addNewUser(User user){
-        return userRepository.save(user);
+    @Transactional
+    public Optional<UserReadDto> create(UserCreateUpdateDto userCreateUpdateDto) {
+        return Optional.of(userCreateUpdateDto)
+                .map(userCreateUpdateMapper::map)
+                .map(userRepository::save)
+                .map(userReadMapper::map);
     }
 
-    public boolean deleteUser(Long id) {
-        Optional<User> user = userRepository.findById(id);
-        if (user.isPresent()) {
-            userRepository.deleteById(id);
-            return true;
-        } else {
-            return false;
-        }
+    @Transactional
+    public Optional<UserReadDto> update(Long id, UserCreateUpdateDto userForUpdate) {
+        return userRepository.findById(id)
+                .map(entity -> userCreateUpdateMapper.map(userForUpdate, entity))
+                .map(userRepository::saveAndFlush)
+                .map(userReadMapper::map);
     }
 
-    public boolean updateUser(User userForUpdate, Long id) {
-        Optional<User> user = userRepository.findById(id);
-        if(user.isPresent()){
-            userForUpdate.setId(id);
-            userRepository.save(userForUpdate);
-             return true;
-        } else{
-            return false;
-        }
+    @Transactional
+    public boolean delete(Long id) {
+        return userRepository.findById(id)
+                .map(entity -> {
+                    userRepository.delete(entity);
+                    userRepository.flush();
+                    return true;
+                })
+                .orElse(false);
     }
 }

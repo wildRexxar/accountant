@@ -1,17 +1,17 @@
 package com.example.accountant.controller;
 
-import com.example.accountant.entity.User;
+import com.example.accountant.dto.UserCreateUpdateDto;
+import com.example.accountant.dto.UserReadDto;
 import com.example.accountant.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
@@ -19,55 +19,42 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserController {
 
-
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<?> getAllUsers() {
-        List<User> users = userService.getAllUser();
-        List<String> usersName = new ArrayList<>();
-        if(users.size() != 0) {
-            usersName = users.stream().map(u -> u.getFirstname()).collect(Collectors.toList());
-        }
-        log.info("Получение списка всех пользвоателей \n " + usersName);
-        return new ResponseEntity<>(usersName, HttpStatus.OK);
-
+    public ResponseEntity<?> findAll() {
+        List<UserReadDto> users = userService.findAll();
+        return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUser(@PathVariable Long id) {
-        Optional<User> user = userService.getUserById(id);
-        if (user.isPresent()) {
-            return new ResponseEntity<>(user.get(), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("user not found", HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<?> findById(@PathVariable Long id) {
+        Optional<UserReadDto> userReadDto = userService.findById(id);
+        return userService.findById(id)
+                .map(u -> new ResponseEntity<>(u, HttpStatus.OK))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     @PostMapping
-    public ResponseEntity<?> addUser(@RequestBody User user) {
-        if (userService.addNewUser(user).equals(user)) {
-            return new ResponseEntity<>(user, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Something went wrong", HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        if (userService.deleteUser(id)) {
-            return new ResponseEntity<>("Success", HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<?> create(@RequestBody UserCreateUpdateDto userCreateUpdateDto) {
+        return userService.create(userCreateUpdateDto)
+                .map(u -> new ResponseEntity<>(u, HttpStatus.CREATED))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User user) {
-        if (userService.updateUser(user, id)) {
-            return new ResponseEntity<>("Success", HttpStatus.OK);
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody UserCreateUpdateDto userCreateUpdateDto) {
+        return userService.update(id, userCreateUpdateDto)
+                .map(u -> new ResponseEntity<>(u, HttpStatus.OK))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        if (userService.delete(id)) {
+            return new ResponseEntity<>(HttpStatus.OK);
         } else {
-            return new ResponseEntity<>("Something went wrong", HttpStatus.BAD_REQUEST);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
     }
 }
